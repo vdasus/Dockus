@@ -27,7 +27,7 @@ assert tuple(map(int, macos.split("."))) <= (12, 0), "symbol is not available on
 EOF
 
 grant() { # $1 = app bundle, $2 = bundle id
-    codesign -d -r- "$1" 2>&1 | sed -n 's/^designated => //p' | csreq -r- -b "$OUT/req.bin"
+    codesign -d -r- "$1" 2>&1 | sed -n 's/^#* *designated => //p' | csreq -r- -b "$OUT/req.bin"
     local req
     req=$(xxd -p "$OUT/req.bin" | tr -d '\n')
     for service in kTCCServiceAccessibility kTCCServicePostEvent kTCCServiceListenEvent; do
