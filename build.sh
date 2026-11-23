@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds a universal, ad-hoc signed Dockus.app and build/Dockus.zip. Requires macOS with Xcode or the Command Line Tools.
+# Builds a universal, ad-hoc signed Dockus.app and build/Dockus.zip. Requires macOS with Xcode (the Command Line Tools lack XCBuild, which universal builds need).
 set -euo pipefail
 cd "$(dirname "$0")"
 
