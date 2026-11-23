@@ -27,7 +27,7 @@ clicking the Dock icon of the active application minimizes its windows, and clic
 - Swift and AppKit only, no third-party dependencies.
 - Event-driven: no timers or polling, near-zero CPU when idle. The only timer runs every 2 seconds while the
   Accessibility permission is missing and stops once it is granted.
-- Expected memory footprint: about 15–25 MB.
+- Memory footprint: about 23 MB RSS (measured on macOS 15 in the end-to-end test).
 - No network access, no telemetry, no update checks.
 
 ## How it works
@@ -37,9 +37,11 @@ clicking the Dock icon of the active application minimizes its windows, and clic
    The click is handled only if the element belongs to the Dock process and has the subrole `AXApplicationDockItem`.
 3. The item's `AXURL` identifies the application bundle, which is matched to an `NSRunningApplication`.
    If the paths differ (for example, Safari in a cryptex), the Dock item title is matched to the application name.
-4. If that application is frontmost and has unminimized windows, Dockus sets `kAXMinimizedAttribute` on each window.
-   If all its windows are minimized, Dockus restores them and activates the application.
-   In both cases Dockus consumes the click and its matching mouse up. Otherwise the event passes to the Dock unchanged.
+4. If that application is frontmost and has unminimized windows, Dockus sets `kAXMinimizedAttribute` on each window
+   and consumes the click and its matching mouse up.
+   If all its windows are minimized, Dockus restores them and passes the click on, so the Dock activates the application
+   (since macOS 14 one application cannot reliably activate another). Other clicks pass to the Dock unchanged.
+   Minimized windows report the subrole `AXDialog`, so they are matched by their minimized state, not by subrole.
 5. Clicks with Cmd, Option, Control or Shift held are always passed to the Dock.
 6. Accessibility calls time out after 0.5 seconds, so an unresponsive application cannot stall mouse input.
 7. If macOS disables the tap (`kCGEventTapDisabledByTimeout`), Dockus enables it again.
@@ -110,6 +112,30 @@ On a Mac with Xcode (the universal build needs Xcode, not only the Command Line 
 ```bash
 ./build.sh   # produces build/Dockus.app and build/Dockus.zip
 ```
+
+### Debug log
+
+Set `DOCKUS_DEBUG` to print one line per handled Dock click to standard error:
+
+```bash
+open --env DOCKUS_DEBUG=1 --stderr /tmp/dockus.log /Applications/Dockus.app
+```
+
+## Testing
+
+Every CI run executes [`Tests/e2e.sh`](Tests/e2e.sh) on the macOS runner against the built `Dockus.app`:
+
+1. Checks that the SF Symbol for the menu bar icon is available on macOS 12.
+2. Grants Accessibility to Dockus and to a test driver app by writing to the system TCC database. This works only
+   because SIP is disabled on GitHub-hosted runners; do not run the script on a personal Mac.
+3. Baseline: without Dockus, a click on the driver's Dock icon leaves its windows alone.
+4. Starts Dockus and checks that a second instance exits and only one process remains.
+5. With Dockus: the driver checks the menu bar item, then clicks its own Dock icon with synthetic mouse events.
+   The first click must minimize both its windows, the second must restore both and leave the app active,
+   and a Cmd-click must not minimize anything.
+6. Prints the Dockus debug log and memory usage.
+
+On failure, the workflow uploads the logs and a screenshot as the `e2e-diagnostics` artifact.
 
 ### Stable signing (optional)
 
