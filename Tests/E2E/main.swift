@@ -79,16 +79,20 @@ final class Driver: NSObject, NSApplicationDelegate {
         pump(1)
 
         let name = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "DockusE2E"
-        var point: CGPoint?
-        _ = waitFor(10) { point = dockItemCenter(title: name); return point != nil }
-        guard let target = point else { finish("FAIL: Dock item '\(name)' not found") }
-        log("Dock item '\(name)' at \(target)")
+        // The Dock re-centers when minimized windows are added or removed, so look the item up before every click.
+        func target() -> CGPoint {
+            var point: CGPoint?
+            _ = waitFor(10) { point = dockItemCenter(title: name); return point != nil }
+            guard let found = point else { finish("FAIL: Dock item '\(name)' not found") }
+            log("Dock item '\(name)' at \(found)")
+            return found
+        }
 
         let allVisible = { self.windows.allSatisfy { !$0.isMiniaturized && $0.isVisible } }
         let allMinimized = { self.windows.allSatisfy { $0.isMiniaturized } }
 
         if PHASE == "baseline" {
-            click(at: target)
+            click(at: target())
             pump(2)
             guard allVisible() else { finish("FAIL: without Dockus the click changed the windows") }
             finish("PASS")
@@ -101,11 +105,12 @@ final class Driver: NSObject, NSApplicationDelegate {
         guard !statusItems.isEmpty else { finish("FAIL: Dockus has no menu bar item") }
         log("Dockus menu bar items: \(statusItems.count)")
 
-        click(at: target)
+        click(at: target())
         guard waitFor(5, allMinimized) else { finish("FAIL: first click did not minimize all windows") }
         log("First click minimized all windows")
 
-        click(at: target)
+        pump(1) // let the Dock finish its layout animation
+        click(at: target())
         guard waitFor(5, { allVisible() && NSApp.isActive }) else {
             let minimized = windows.filter { $0.isMiniaturized }.count
             let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "none"
@@ -113,10 +118,12 @@ final class Driver: NSObject, NSApplicationDelegate {
         }
         log("Second click restored all windows")
 
-        let modifierDown = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: target, mouseButton: .left)
+        pump(1)
+        let point = target()
+        let modifierDown = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: point, mouseButton: .left)
         modifierDown?.flags = .maskCommand
         modifierDown?.post(tap: .cghidEventTap)
-        let modifierUp = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: target, mouseButton: .left)
+        let modifierUp = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: point, mouseButton: .left)
         modifierUp?.flags = .maskCommand
         modifierUp?.post(tap: .cghidEventTap)
         pump(2)
