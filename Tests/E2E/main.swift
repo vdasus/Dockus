@@ -107,7 +107,9 @@ final class Driver: NSObject, NSApplicationDelegate {
 
         click(at: target)
         guard waitFor(5, { allVisible() && NSApp.isActive }) else {
-            finish("FAIL: second click did not restore all windows")
+            let minimized = windows.filter { $0.isMiniaturized }.count
+            let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "none"
+            finish("FAIL: second click: \(minimized) of \(windows.count) windows minimized, active=\(NSApp.isActive), frontmost=\(front)")
         }
         log("Second click restored all windows")
 

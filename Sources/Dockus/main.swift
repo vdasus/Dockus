@@ -76,9 +76,10 @@ func handleClick(at point: CGPoint) -> Bool {
         return visible.map { setMinimized($0, true) }.contains(true)
     }
     if visible.isEmpty {
-        let restored = windows.map { setMinimized($0, false) }.contains(true)
-        if restored { app.activate(options: [.activateIgnoringOtherApps]) }
-        return restored
+        // Restore every window, then pass the click on so the Dock activates the app:
+        // since macOS 14 one app cannot reliably activate another.
+        windows.forEach { _ = setMinimized($0, false) }
+        return false
     }
     return false // inactive app with visible windows: the Dock activates it
 }
