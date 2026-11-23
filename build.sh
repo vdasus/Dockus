@@ -1,9 +1,10 @@
 #!/bin/bash
-# Builds a universal, ad-hoc signed Dockus.app and build/Dockus.zip. Requires macOS with Xcode (the Command Line Tools lack XCBuild, which universal builds need).
+# Builds a universal Dockus.app, signed with SIGN_IDENTITY (default: ad-hoc), and build/Dockus.zip. Requires macOS with Xcode (the Command Line Tools lack XCBuild, which universal builds need).
 set -euo pipefail
 cd "$(dirname "$0")"
 
 VERSION="${VERSION:-0.0.0}"
+SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 APP=build/Dockus.app
 
 swift build -c release --arch arm64 --arch x86_64
@@ -20,7 +21,7 @@ for size in 16 32 128 256 512; do
 done
 iconutil -c icns build/AppIcon.iconset -o "$APP/Contents/Resources/AppIcon.icns"
 
-codesign --force --sign - --identifier io.github.vdasus.Dockus "$APP"
+codesign --force --sign "$SIGN_IDENTITY" --identifier io.github.vdasus.Dockus "$APP"
 codesign --verify --strict "$APP"
 lipo -archs "$APP/Contents/MacOS/Dockus"
 # Fails the build unless every slice targets macOS 12 (Monterey).

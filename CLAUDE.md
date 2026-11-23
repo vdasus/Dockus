@@ -29,7 +29,7 @@ Release: `git tag vX.Y.Z && git push origin vX.Y.Z`, SemVer (fix: patch, feature
 - **Runtime / SDK**: Swift 5.7 tools (`Package.swift`), AppKit, deployment target macOS 12; universal binary (arm64, x86_64)
 - **Tools**: Xcode, `swift`, `sips`, `iconutil`, `codesign`, `lipo`, `otool`, `ditto` (all called by `build.sh`)
 - **Services**: none at runtime (no network access). CI: GitHub Actions macOS runners; releases on github.com/vdasus/Dockus
-- **Configuration**: `DOCKUS_DEBUG` environment variable (debug log to stderr); `Info.plist` (`__VERSION__` replaced from the `VERSION` variable in `build.sh`); the Enabled setting persists in user defaults; Launch at Login writes `~/Library/LaunchAgents/io.github.vdasus.Dockus.plist`; instance lock at `~/Library/Application Support/<bundle id>/instance.lock`. No secrets
+- **Configuration**: `DOCKUS_DEBUG` environment variable (debug log to stderr); `Info.plist` (`__VERSION__` replaced from the `VERSION` variable in `build.sh`); GitHub Secrets `SIGNING_P12` and `SIGNING_PASSWORD` (self-signed code signing certificate, `SIGN_IDENTITY` in `build.sh`; the owner keeps a copy outside the repo); the Enabled setting persists in user defaults; Launch at Login writes `~/Library/LaunchAgents/io.github.vdasus.Dockus.plist`; instance lock at `~/Library/Application Support/<bundle id>/instance.lock`. No secrets
 - **Deploy target**: user's Mac, `Dockus.app` in `/Applications` from GitHub Releases; see [README](README.md#installation)
 
 ## Project wiki

@@ -82,8 +82,10 @@ System Preferences pane. Dockus starts working as soon as access is granted; no 
 
 ### Updating
 
-With ad-hoc signing, the code signature changes on every build, so macOS asks for the Accessibility permission again
-after each update. Remove the old Dockus entry from the Accessibility list and grant access again.
+Release builds are signed with the same self-signed certificate, so the Accessibility permission survives updates.
+After the first update from an ad-hoc signed build (1.1.0 or earlier), or after a build without the certificate (for
+example, from a pull request), the permission is lost: run `tccutil reset Accessibility io.github.vdasus.Dockus` and
+grant access again.
 
 ## Building
 
@@ -95,7 +97,8 @@ The workflow:
 2. Runs [`build.sh`](build.sh), which builds a universal binary with `swift build -c release --arch arm64 --arch x86_64`.
 3. Builds `AppIcon.icns` from `Resources/AppIcon.png` (1024×1024) with `sips` and `iconutil`.
    The application icon appears in Finder and in the Accessibility list.
-4. Assembles `Dockus.app` with deployment target `12.0` and signs it ad-hoc (`codesign -s -`).
+4. Assembles `Dockus.app` with deployment target `12.0` and signs it with the self-signed certificate from GitHub
+   Secrets (ad-hoc, `codesign -s -`, when the secrets are not available).
 5. Zips the bundle and uploads it as a workflow artifact; a pushed tag publishes it as a GitHub Release.
 
 Versions follow [Semantic Versioning](https://semver.org): increment the patch number for a fix, the minor number for
@@ -141,11 +144,25 @@ Every CI run executes [`Tests/e2e.sh`](Tests/e2e.sh) on the macOS runner against
 
 On failure, the workflow uploads the logs and a screenshot as the `e2e-diagnostics` artifact.
 
-### Stable signing (optional)
+### Stable signing
 
-To keep the Accessibility permission across updates, sign every build with the same self-signed code signing
-certificate instead of an ad-hoc signature. Store the certificate and its password in GitHub Secrets and import it into
-a temporary keychain in the workflow. No Apple Developer Program membership is needed for this.
+macOS ties the Accessibility permission to the designated requirement of the code signature. An ad-hoc signature
+changes on every build; a signature made with the same certificate does not. The workflow imports a self-signed code
+signing certificate (common name `Dockus Self-Signed`) from the GitHub Secrets `SIGNING_P12` (base64 of a `.p12` file)
+and `SIGNING_PASSWORD` into a temporary keychain and passes it to `build.sh` as `SIGN_IDENTITY`. No Apple Developer
+Program membership is needed. Local builds sign ad-hoc unless `SIGN_IDENTITY` is set.
+
+To create a new certificate (every installed copy then needs the permission granted once more):
+
+```bash
+openssl req -x509 -newkey rsa:2048 -nodes -days 7300 -subj "/CN=Dockus Self-Signed" \
+  -addext "basicConstraints=critical,CA:false" -addext "keyUsage=critical,digitalSignature" \
+  -addext "extendedKeyUsage=critical,codeSigning" -keyout key.pem -out cert.pem
+openssl pkcs12 -export -inkey key.pem -in cert.pem -name "Dockus Self-Signed" \
+  -keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1 -out dockus.p12
+base64 -i dockus.p12 | gh secret set SIGNING_P12
+gh secret set SIGNING_PASSWORD
+```
 
 ## License
 

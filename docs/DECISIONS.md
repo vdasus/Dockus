@@ -9,8 +9,7 @@ Dockus is a single Swift Package executable using AppKit and the Accessibility A
 
 `build.sh` builds a universal binary on a `macos-15` runner and signs it ad-hoc (`codesign -s -`); a `v*` tag publishes
 a GitHub Release. **Why:** the target Mac has no development tools, and no Apple Developer Program membership is used.
-Cost: the Accessibility permission must be granted again after each update (stable self-signed signing is an optional
-future step, see README).
+Superseded for CI builds by the self-signed certificate decision below.
 
 ## 2026-11-23 Support macOS 12 Monterey
 
@@ -41,3 +40,10 @@ The project is released under The Unlicense. **Why:** personal tool, no restrict
 A release tag `vX.Y.Z` sets the version (fix: patch, feature: minor, breaking change: major); untagged CI builds get
 `<last tag>-dev.<run number>`. The menu bar menu shows `Dockus <version>`. **Why:** the user must see which build is
 installed; the tag is the single source of the version, so no version file needs to be kept in sync.
+
+## 2026-11-23 Sign CI builds with one self-signed certificate
+
+CI imports a self-signed code signing certificate (`Dockus Self-Signed`, valid 20 years) from GitHub Secrets and signs
+every build with it; without the secrets `build.sh` falls back to ad-hoc. **Why:** the Accessibility permission is tied
+to the signature's designated requirement, which changes with every ad-hoc build; a fixed certificate keeps it across
+updates. An Apple Developer ID was rejected: paid membership for a personal tool.

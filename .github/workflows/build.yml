@@ -18,6 +18,25 @@ jobs:
         with:
           fetch-depth: 0 # tags are needed for the version of untagged builds
 
+      - name: Import signing certificate
+        env:
+          SIGNING_P12: ${{ secrets.SIGNING_P12 }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          # No secrets (for example, a pull request from a fork): build.sh signs ad-hoc.
+          [[ -n "$SIGNING_P12" ]] || exit 0
+          KC="$RUNNER_TEMP/signing.keychain-db"
+          KC_PASSWORD="$(openssl rand -hex 16)"
+          security create-keychain -p "$KC_PASSWORD" "$KC"
+          security set-keychain-settings "$KC"
+          security unlock-keychain -p "$KC_PASSWORD" "$KC"
+          echo "$SIGNING_P12" | base64 --decode > "$RUNNER_TEMP/signing.p12"
+          security import "$RUNNER_TEMP/signing.p12" -k "$KC" -P "$SIGNING_PASSWORD" -T /usr/bin/codesign
+          rm "$RUNNER_TEMP/signing.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KC_PASSWORD" "$KC" >/dev/null
+          security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
+          echo "SIGN_IDENTITY=Dockus Self-Signed" >> "$GITHUB_ENV"
+
       - name: Build
         run: |
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then VERSION="${GITHUB_REF_NAME#v}"; else VERSION="$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || echo v0.0.0)"; VERSION="${VERSION#v}-dev.$GITHUB_RUN_NUMBER"; fi
