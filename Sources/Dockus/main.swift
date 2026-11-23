@@ -46,8 +46,8 @@ func setMinimized(_ window: AXUIElement, _ minimized: Bool) -> Bool {
 func standardWindows(of pid: pid_t) -> [AXUIElement] {
     let app = AXUIElementCreateApplication(pid)
     let windows = attribute(app, kAXWindowsAttribute) as? [AXUIElement] ?? []
-    debugLog("AXWindows: \(windows.map { "\(attribute($0, kAXSubroleAttribute) as? String ?? "nil") minimized=\(isMinimized($0))" })")
-    return windows.filter { (attribute($0, kAXSubroleAttribute) as? String) == kAXStandardWindowSubrole }
+    // Minimized windows report the subrole AXDialog, so keep them regardless of subrole.
+    return windows.filter { isMinimized($0) || (attribute($0, kAXSubroleAttribute) as? String) == kAXStandardWindowSubrole }
 }
 
 /// The running application behind a Dock item, or nil if the item is not a running application.
