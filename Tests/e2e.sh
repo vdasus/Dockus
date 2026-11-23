@@ -50,7 +50,7 @@ run_driver() { # $1 = phase
 run_driver baseline
 
 echo "== Starting Dockus"
-open "$DOCKUS"
+open --env DOCKUS_DEBUG=1 --stderr "$OUT/dockus.log" "$DOCKUS"
 sleep 3
 pgrep -x Dockus
 
@@ -66,7 +66,9 @@ wait "$second" # exit code 0 expected; set -e fails the script otherwise
 [[ "$(pgrep -x Dockus | wc -l | tr -d ' ')" == "1" ]]
 echo "Second instance exited, one Dockus process left"
 
-run_driver dockus
+run_driver dockus || { echo "== Dockus log"; cat "$OUT/dockus.log"; exit 1; }
+echo "== Dockus log"
+cat "$OUT/dockus.log"
 
 echo "== Memory"
 ps -o rss= -p "$(pgrep -x Dockus)" | awk '{printf "Dockus RSS: %.1f MB\n", $1 / 1024}'

@@ -19,6 +19,12 @@ func acquireInstanceLock() -> Bool {
 
 guard acquireInstanceLock() else { exit(0) }
 
+let DEBUG = ProcessInfo.processInfo.environment["DOCKUS_DEBUG"] != nil
+
+func debugLog(_ message: @autoclosure () -> String) {
+    if DEBUG { FileHandle.standardError.write((message() + "\n").data(using: .utf8)!) }
+}
+
 // MARK: - Accessibility helpers
 
 let systemWide = AXUIElementCreateSystemWide()
@@ -69,8 +75,9 @@ func handleClick(at point: CGPoint) -> Bool {
           let app = runningApplication(forDockItem: item) else { return false }
 
     let windows = standardWindows(of: app.processIdentifier)
-    guard !windows.isEmpty else { return false } // no windows: let the Dock open one
     let visible = windows.filter { !isMinimized($0) }
+    debugLog("click: \(app.bundleIdentifier ?? "?") active=\(app.isActive) windows=\(windows.count) visible=\(visible.count)")
+    guard !windows.isEmpty else { return false } // no windows: let the Dock open one
 
     if app.isActive && !visible.isEmpty {
         return visible.map { setMinimized($0, true) }.contains(true)
