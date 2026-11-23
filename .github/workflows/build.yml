@@ -21,6 +21,21 @@ jobs:
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then VERSION="${GITHUB_REF_NAME#v}"; else VERSION="0.0.$GITHUB_RUN_NUMBER"; fi
           VERSION="$VERSION" ./build.sh
 
+      - name: End-to-end test
+        run: ./Tests/e2e.sh
+
+      - name: Screenshot on failure
+        if: failure()
+        run: screencapture -x build/failure.png || true
+
+      - uses: actions/upload-artifact@v6
+        if: failure()
+        with:
+          name: e2e-diagnostics
+          path: |
+            build/e2e/*.log
+            build/failure.png
+
       - uses: actions/upload-artifact@v6
         with:
           name: Dockus
