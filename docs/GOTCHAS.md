@@ -17,8 +17,10 @@ the click on to the Dock, which activates the app.
 
 ## Accessibility permission lost after every update
 
-**Cause:** the ad-hoc code signature changes on every build. **Fix:** remove the old Dockus entry from the Accessibility
-list and grant access again, or sign every build with the same self-signed certificate.
+Symptom: the menu shows "Grant Accessibility Access…" although Dockus is checked in the Accessibility list.
+**Cause:** the ad-hoc code signature changes on every build, and the checked entry belongs to the old signature.
+**Fix:** `tccutil reset Accessibility io.github.vdasus.Dockus`, then grant access again (no restart needed), or sign
+every build with the same self-signed certificate.
 
 ## TCC grant in the end-to-end test fails for ad-hoc signed apps
 
@@ -33,6 +35,6 @@ GitHub-hosted runners. **Fix:** run it only in CI.
 
 ## Clicking the active app's Dock icon minimizes and immediately restores its windows (macOS 12)
 
-**Cause (probable, to be confirmed on macOS 12):** minimizing inside the event tap callback blocks for the minimize animation; macOS disables the tap after its
+**Cause:** minimizing inside the event tap callback blocks for the minimize animation; macOS disables the tap after its
 timeout and delivers the click to the Dock, which restores the window. **Fix:** decide in the callback, swallow the
 click, and minimize later with `DispatchQueue.main.async` (`Sources/Dockus/main.swift`).
