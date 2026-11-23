@@ -1,3 +1,5 @@
+<img src="Resources/AppIcon.png" alt="Dockus icon" width="96" align="left">
+
 # Dockus
 
 A small macOS menu bar utility that brings Windows taskbar behavior to the Dock:
