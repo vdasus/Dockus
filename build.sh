@@ -23,6 +23,8 @@ iconutil -c icns build/AppIcon.iconset -o "$APP/Contents/Resources/AppIcon.icns"
 codesign --force --sign - --identifier io.github.vdasus.Dockus "$APP"
 codesign --verify --strict "$APP"
 lipo -archs "$APP/Contents/MacOS/Dockus"
+# Fails the build unless every slice targets macOS 12 (Monterey).
+[[ "$(otool -l "$APP/Contents/MacOS/Dockus" | awk '/minos/ {print $2}' | sort -u)" == "12.0" ]]
 
 ditto -c -k --keepParent "$APP" build/Dockus.zip
 echo "Built $APP ($VERSION)"

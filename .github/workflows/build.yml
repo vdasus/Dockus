@@ -21,7 +21,7 @@ jobs:
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then VERSION="${GITHUB_REF_NAME#v}"; else VERSION="0.0.$GITHUB_RUN_NUMBER"; fi
           VERSION="$VERSION" ./build.sh
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: Dockus
           path: build/Dockus.zip
