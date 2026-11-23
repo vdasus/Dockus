@@ -46,6 +46,7 @@ func setMinimized(_ window: AXUIElement, _ minimized: Bool) -> Bool {
 func standardWindows(of pid: pid_t) -> [AXUIElement] {
     let app = AXUIElementCreateApplication(pid)
     let windows = attribute(app, kAXWindowsAttribute) as? [AXUIElement] ?? []
+    debugLog("AXWindows: \(windows.map { "\(attribute($0, kAXSubroleAttribute) as? String ?? "nil") minimized=\(isMinimized($0))" })")
     return windows.filter { (attribute($0, kAXSubroleAttribute) as? String) == kAXStandardWindowSubrole }
 }
 
