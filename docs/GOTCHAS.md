@@ -30,3 +30,9 @@ list and grant access again, or sign every build with the same self-signed certi
 
 **Cause:** it grants Accessibility by writing to the system TCC database, which works only with SIP disabled, as on
 GitHub-hosted runners. **Fix:** run it only in CI.
+
+## Clicking the active app's Dock icon minimizes and immediately restores its windows (macOS 12)
+
+**Cause (probable, to be confirmed on macOS 12):** minimizing inside the event tap callback blocks for the minimize animation; macOS disables the tap after its
+timeout and delivers the click to the Dock, which restores the window. **Fix:** decide in the callback, swallow the
+click, and minimize later with `DispatchQueue.main.async` (`Sources/Dockus/main.swift`).

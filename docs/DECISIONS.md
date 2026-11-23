@@ -35,3 +35,9 @@ When all windows of the clicked app are minimized, Dockus restores them and pass
 ## 2026-11-23 Public domain license
 
 The project is released under The Unlicense. **Why:** personal tool, no restrictions wanted.
+
+## 2026-11-23 Semantic versioning from git tags, shown in the menu
+
+A release tag `vX.Y.Z` sets the version (fix: patch, feature: minor, breaking change: major); untagged CI builds get
+`<last tag>-dev.<run number>`. The menu bar menu shows `Dockus <version>`. **Why:** the user must see which build is
+installed; the tag is the single source of the version, so no version file needs to be kept in sync.

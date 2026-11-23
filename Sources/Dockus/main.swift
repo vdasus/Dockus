@@ -81,7 +81,10 @@ func handleClick(at point: CGPoint) -> Bool {
     guard !windows.isEmpty else { return false } // no windows: let the Dock open one
 
     if app.isActive && !visible.isEmpty {
-        return visible.map { setMinimized($0, true) }.contains(true)
+        // Minimize after the tap callback returns: the minimize animation can block the call past the tap
+        // timeout, and macOS then disables the tap and passes the click to the Dock, which restores the window.
+        DispatchQueue.main.async { visible.forEach { _ = setMinimized($0, true) } }
+        return true
     }
     if visible.isEmpty {
         // Restore every window, then pass the click on so the Dock activates the app:
@@ -99,6 +102,7 @@ var isEnabled = !UserDefaults.standard.bool(forKey: DISABLED_KEY)
 let eventCallback: CGEventTapCallBack = { _, type, event, _ in
     switch type {
     case .tapDisabledByTimeout, .tapDisabledByUserInput:
+        debugLog("event tap disabled (\(type.rawValue)), re-enabling")
         if let tap = eventTap { CGEvent.tapEnable(tap: tap, enable: true) }
     case .leftMouseDown:
         let modifiers: CGEventFlags = [.maskCommand, .maskAlternate, .maskControl, .maskShift]
@@ -190,6 +194,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(item("Enabled", #selector(toggleEnabled), state: isEnabled))
         menu.addItem(item("Launch at Login", #selector(toggleLaunchAtLogin), state: isLaunchAtLoginEnabled()))
         menu.addItem(.separator())
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev"
+        menu.addItem(NSMenuItem(title: "Dockus \(version)", action: nil, keyEquivalent: ""))
         menu.addItem(item("Quit Dockus", #selector(NSApplication.terminate(_:)), key: "q", target: NSApp))
     }
 

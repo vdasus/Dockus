@@ -15,10 +15,12 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # tags are needed for the version of untagged builds
 
       - name: Build
         run: |
-          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then VERSION="${GITHUB_REF_NAME#v}"; else VERSION="0.0.$GITHUB_RUN_NUMBER"; fi
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then VERSION="${GITHUB_REF_NAME#v}"; else VERSION="$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || echo v0.0.0)"; VERSION="${VERSION#v}-dev.$GITHUB_RUN_NUMBER"; fi
           VERSION="$VERSION" ./build.sh
 
       - name: End-to-end test

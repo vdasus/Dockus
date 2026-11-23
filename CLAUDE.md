@@ -22,7 +22,7 @@ Debug log:
 open --env DOCKUS_DEBUG=1 --stderr /tmp/dockus.log /Applications/Dockus.app
 ```
 
-Release: `git tag v1.0.0 && git push origin v1.0.0`. Installation: see [README](README.md#installation).
+Release: `git tag vX.Y.Z && git push origin vX.Y.Z`, SemVer (fix: patch, feature: minor, breaking: major); see the last tag with `git describe --tags --abbrev=0`. Installation: see [README](README.md#installation).
 
 ## Environment
 

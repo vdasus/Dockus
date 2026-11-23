@@ -98,11 +98,13 @@ The workflow:
 4. Assembles `Dockus.app` with deployment target `12.0` and signs it ad-hoc (`codesign -s -`).
 5. Zips the bundle and uploads it as a workflow artifact; a pushed tag publishes it as a GitHub Release.
 
-To publish a release:
+Versions follow [Semantic Versioning](https://semver.org): increment the patch number for a fix, the minor number for
+a new feature, the major number for a change that breaks existing behavior. The version comes from the tag and is shown
+in the menu bar menu; untagged builds show the last tag with `-dev.<run number>`. To publish a release:
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
 GitHub Actions minutes are free for public repositories.
